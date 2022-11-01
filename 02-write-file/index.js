@@ -21,7 +21,6 @@ process.on('SIGINT', () => {
 });
 stdin.on('data', data => {
   if (data.toString().slice(0,4) === 'exit') process.exit();
-  console.debug(data.toString().charCodeAt(data.toString().length - 1));
   fs.appendFile(
     path.resolve(__dirname, 'notes.txt'),
     data.toString(),
