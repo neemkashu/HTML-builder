@@ -1,19 +1,23 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'node:path';
+import { readdir } from 'node:fs/promises';
+import { fileURLToPath } from 'url';
+import { stat } from 'node:fs/promises';
 
-//let subfolderPath = path.join(__dirname,'secret-folder'); // this is also need to be promise
 async function readStats(folder) {
   try {
-    const pathToFolder = path.join(__dirname,folder);
-    const files = await fs.promises.readdir(pathToFolder, { withFileTypes: true });
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const pathToFolder = path.join( __dirname, folder);
+    const files = await readdir(pathToFolder, { withFileTypes: true });
+
     for (const file of files)
       if (file.isFile()) {
-        const statOfFile = await fs.promises.stat(path.join(pathToFolder,file.name));
+        const statOfFile = await stat(path.join(pathToFolder,file.name));
         console.log(file.name, ' - ',
                     path.extname(path.join(pathToFolder,file.name)).substring(1),' - ',
                     statOfFile.size, ' bytes');  
       }
-  } catch (err) {
+  }
+  catch (err) {
     console.error(err);
   }
 }
