@@ -1,10 +1,14 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'node:path';
+import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+
 const { stdout, stdin } = process;
 let flagOfSIGINT = 0;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 stdout.write('Type a text and press ENTER\n');
 fs.writeFile(
+  
   path.resolve(__dirname, 'notes.txt'),
   '',
   (err) => {
