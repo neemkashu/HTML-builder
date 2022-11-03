@@ -21,8 +21,15 @@ class Copir {
       await rm(this.pathNewFolder, {force: true, recursive: true})
         .then( async () => {
           const folderObject = await readdir(this.__dirname, { withFileTypes: true });
+          let targetFolder;
+          for (let eachFolder of folderObject) {
+            if (eachFolder.name === folder && !eachFolder.isFile()) {
+              targetFolder = eachFolder;
+              break;
+            } 
+          }
           if (isRemoved === undefined) {
-            mkdir(this.pathNewFolder, { recursive: true }).then( this.copySubDir([undefined], folderObject[0] )); //TODO: fix the [0]
+            mkdir(this.pathNewFolder, { recursive: true }).then( this.copySubDir([undefined], targetFolder )); 
           }
         });
       
