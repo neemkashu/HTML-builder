@@ -2,25 +2,36 @@ import path from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'url';
 import { rm } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
+import { copyFile, constants } from 'node:fs/promises';
 
 async function copyDir (folder) {
   try {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const newFolder = folder + '-copy';
-    const pathNewFolder = path.join( __dirname, newFolder);
+    const pathToFolder = path.join( __dirname, folder);
+    const pathNewFolder = path.join(__dirname, newFolder);
     
-    const isRemoved = await rm(pathNewFolder, { force: true, maxRetries: 0, recursive: true })
-    
-    if (isRemoved === undefined) {
-      mkdir(pathNewFolder, { recursive: true });
+    async function copySubDir(node, ancestorDir) {
+      if (node.isFile() ) { // node is file or directory
+        copyFile(path.join(folder, ancestorDir, node.name), path.join(newFolder, ancestorDir, node.name));
+      }
+      if ( !node.isFile() ) {
+        const children = await readdir(node, { withFileTypes: true });
+        for (const child of children) {
+          copySubDir(child, path.join(ancestorDir, node.name) );
+        }
+      }
     }
-    // for (const file of files)
-    //   if (file.isFile()) {
-    //     const statOfFile = await stat(path.join(pathToFolder,file.name));
-    //     console.log(file.name, ' - ',
-    //                 path.extname(path.join(pathToFolder,file.name)).substring(1),' - ',
-    //                 statOfFile.size, ' bytes');  
-    //   }
+    const isRemoved = await rm(pathNewFolder, { force: true, maxRetries: 0, recursive: true });
+    const folderObject = await readdir(pathToFolder, { withFileTypes: true });
+    if (isRemoved === undefined) {
+      mkdir(pathNewFolder, { recursive: true })
+      .then( copySubDir(folderObject[0], __dirname ))
+    }
+
+    
   }
   catch (err) {
     console.error(err);
