@@ -1,14 +1,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 import fs from 'node:fs';
+import { stdout } from 'node:process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-fs.readFile(
-  path.resolve(__dirname, 'text.txt'),
-  'utf-8',
-  (err, data) => {
-    if (err) throw err;
-    console.log(data);
-  }
-);
+(async () => {
+  let fileContent = '';
+  const readableStream = fs.createReadStream(path.join(__dirname, 'text.txt'),{encoding: 'utf8'});
+  readableStream.on('data', chunk => fileContent += chunk );
+  readableStream.on('end', () => stdout.write(fileContent));
+})();
