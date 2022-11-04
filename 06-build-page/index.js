@@ -79,9 +79,34 @@ async function buildStyles() {
       componentNames.push(component.name);
     } 
   }
-  return { paths: componentList, names: componentNames};
-}
+  
+  return new Promise ((resolve, reject) => {
+    resolve({ paths: componentList, names: componentNames} );
+  });
 
+}
+async function cutTemplate (htmlCode){
+
+//   let strExample = 
+// `<body>
+//   {{header}}
+//   <main class="main">
+//     {{articles}}
+//   </main>
+//   {{footer}}
+// </body>`;
+
+  let regexpPlaceHolder = /\{\{(.*?)\}\}/ig;
+  let regexpSpaces = /[ ]{0,}\{\{/ig;
+
+  let infoTemplate = {};
+  infoTemplate.listPlaceHolders = htmlCode.match(regexpPlaceHolder);
+  infoTemplate.listIndents = htmlCode.match(regexpSpaces);
+
+  console.log( listPlaceHolders );
+  console.log( listIndents );
+  return infoTemplate;
+}
 async function readTemplate(templateName) {
   const pathToTemplate = path.join(__dirname, templateName);
   const streamReadTemplate = fs.createReadStream(pathToTemplate, 'utf-8');
@@ -89,16 +114,28 @@ async function readTemplate(templateName) {
   let htmlCode = '';
   streamReadTemplate.on('data', chunk => {
     htmlCode += chunk;
-    console.log(typeof chunk); 
+    //console.log(htmlCode); 
     //TODO: if the slot is cut by chunk this should not throw error
+  });
+  return new Promise ((resolve, reject) => {
+    streamReadTemplate.on('data', chunk => {
+      htmlCode += chunk; //TODO: if the slot is cut by chunk this should not throw error
+    });
+    streamReadTemplate.on('error', (err) => reject(err));
+    streamReadTemplate.on('end', () => resolve(htmlCode));
   });
 }
 
 
 buildStyles();
 
-let promise = findComponents();
-promise.then(
-  result => console.log(result)
-);
-let promiseTemplate = readTemplate('template.html');
+let promiseListComponents = await findComponents();
+// promise.then(
+//   result => console.log(result)
+// );
+console.log(promiseListComponents);
+let promiseTemplate = await readTemplate('template.html');
+// promiseTemplate.then(
+//   result => console.log(result)
+// );
+console.log(promiseTemplate);
