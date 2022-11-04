@@ -71,18 +71,34 @@ async function buildStyles() {
   const pathComponents  = path.join(__dirname, 'components');
   const components = await readdir(pathComponents, { withFileTypes: true });
   let componentList = [];
+  let componentNames = [];
   for (let component of components) {
     const pathComponent = path.join(pathComponents, component.name);
     if (component.isFile() && isHTML(component.name) ) {
       componentList.push(pathComponent);
+      componentNames.push(component.name);
     } 
   }
-  return componentList;
+  return { paths: componentList, names: componentNames};
+}
+
+async function readTemplate(templateName) {
+  const pathToTemplate = path.join(__dirname, templateName);
+  const streamReadTemplate = fs.createReadStream(pathToTemplate, 'utf-8');
+
+  let htmlCode = '';
+  streamReadTemplate.on('data', chunk => {
+    htmlCode += chunk;
+    console.log(typeof chunk); 
+    //TODO: if the slot is cut by chunk this should not throw error
+  });
 }
 
 
 buildStyles();
+
 let promise = findComponents();
 promise.then(
   result => console.log(result)
 );
+let promiseTemplate = readTemplate('template.html');
