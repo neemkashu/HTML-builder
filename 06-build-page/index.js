@@ -62,18 +62,21 @@ async function buildStyles() {
 async function findComponents() {   
   const pathComponents  = path.join(__dirname, 'components');
   const components = await readdir(pathComponents, { withFileTypes: true });
-  let componentList = [];
-  let componentNames = [];
+  //let componentList = [];
+  //let componentNames = [];
+
+  let listComponents = {};
+
   for (let component of components) {
     const pathComponent = path.join(pathComponents, component.name);
     if (component.isFile() && isCorrectExt(component.name, '.html') ) {
-      componentList.push(pathComponent);
-      componentNames.push(component.name);
+      let name = path.parse(component.name).name;
+      listComponents[name] = { path: pathComponent, fileName:  name};
     } 
   }
   
   return new Promise ((resolve, reject) => {
-    resolve({ paths: componentList, names: componentNames} );
+    resolve( listComponents );
   });
 
 }
@@ -92,8 +95,19 @@ async function cutTemplate (htmlCode){
   let regexpSpaces = /[ ]{0,}\{\{/ig;
 
   let infoTemplate = {};
-  infoTemplate.listPlaceHolders = htmlCode.match(regexpPlaceHolder);
-  infoTemplate.listIndents = htmlCode.match(regexpSpaces);
+  let listPlaceHolders = htmlCode.match(regexpPlaceHolder);
+  let listIndents = htmlCode.match(regexpSpaces);
+
+  for (let i = 0; i < listPlaceHolders.length; i++) {
+    const element = listPlaceHolders[ i ];
+    const indent = listIndents[ i ];
+    let length = element.length;
+    let indentLength = indent.length;
+
+    let name = element.slice(2, length - 2);
+    let indentString = indent.slice(0, indentLength - 2);
+    infoTemplate[name] = { placeHolder: element, indents: indentString }
+  }
 
   return infoTemplate;
 }
@@ -109,6 +123,19 @@ async function readHTML(pathHTML) {
     streamReadTemplate.on('error', (err) => reject(err));
     streamReadTemplate.on('end', () => resolve(htmlCode));
   });
+}
+async function insertComponents() {
+  const promiseTemplateCode = await readHTML(path.join (__dirname,'template.html'));
+  const infoTemplate = await cutTemplate(promiseTemplate);
+  const listComponents = await findComponents();
+
+  
+
+
+  
+
+
+
 }
 
 
