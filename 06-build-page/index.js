@@ -125,27 +125,64 @@ async function readHTML(pathHTML) {
   });
 }
 async function insertComponents() {
-  const promiseTemplateCode = await readHTML(path.join (__dirname,'template.html'));
-  const infoTemplate = await cutTemplate(promiseTemplate);
+  let promiseTemplateCode = await readHTML(path.join (__dirname,'template.html'));
+  const infoPlaceHolders = await cutTemplate( promiseTemplateCode );
   const listComponents = await findComponents();
+  const pathBundleHTML = path.join(__dirname, 'project-dist', 'index.html');
 
-  
+  for (let component in listComponents) {
+    const componentContent = await readHTML(listComponents[component].path);
+    const placeHolderStr = infoPlaceHolders[component].placeHolder;
+    const indentStr = infoPlaceHolders[component].indents;
 
+    console.log('------insert initializing-----');
+    console.log('componentContent', componentContent.slice(0,35), '...');
+    console.log('placeHolderStr', placeHolderStr);
+    console.log('the indent is ---- ', indentStr.length, indentStr.charCodeAt(0));
 
-  
+    console.log(`the char code of original SPACES is ${componentContent.charCodeAt(23)}
+the char code of original ENTERS is ${componentContent.charCodeAt(24)}
+then is vhar code ${componentContent.charCodeAt(25)}`);
 
+    let linesOfCode = componentContent.split(String.fromCharCode(13)+String.fromCharCode(10));
+    console.log('LOG one line of code, the same indeces use');
+    console.log(`the char code of line SPACES is ${linesOfCode[0].charCodeAt(22)}
+    the char code of line ENTERS is ${linesOfCode[0].charCodeAt(23)}
+    then is char code ${linesOfCode[0].charCodeAt(24)}`);
+    
+    let linesWithSpaces = [];
+    linesWithSpaces.push(linesOfCode[0]);
+    for (let i = 1; i < linesOfCode.length; i++ ){
+      let line = linesOfCode[ i ];
+      linesWithSpaces.push(indentStr + line);
+    }
+    console.log(linesWithSpaces[0]);
 
+    let contentWithIndents = linesWithSpaces.join(`${String.fromCharCode(13)}${String.fromCharCode(10)}`);
+
+    //console.log(contentWithIndents);
+
+    promiseTemplateCode = promiseTemplateCode.replace(placeHolderStr,contentWithIndents);
+  }
+
+  writeFile(pathBundleHTML,'')
+  .then( async () => {
+    const writeStream = fs.createWriteStream(pathBundleHTML, {flags:'a'});
+    writeStream.write(promiseTemplateCode);
+  }
+  );
 
 }
 
 
 buildStyles();
+insertComponents();
 
-const promiseListComponents = await findComponents();
-console.log('promiseListComponents', promiseListComponents);
+// const promiseListComponents = await findComponents();
+// console.log('promiseListComponents', promiseListComponents);
 
-const promiseTemplate = await readHTML(path.join (__dirname,'template.html'));
-const infoTemplate = await cutTemplate(promiseTemplate);
-console.log('info template', infoTemplate);
-const promiseArticle = await readHTML(path.join (__dirname, 'components', 'articles.html'));
-console.log('info Article', promiseArticle);
+// const promiseTemplate = await readHTML(path.join (__dirname,'template.html'));
+// const infoTemplate = await cutTemplate(promiseTemplate);
+// console.log('info template', infoTemplate);
+// const promiseArticle = await readHTML(path.join (__dirname, 'components', 'articles.html'));
+// console.log('info Article', promiseArticle);
