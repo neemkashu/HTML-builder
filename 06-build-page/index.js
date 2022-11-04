@@ -44,12 +44,14 @@ async function bundleStyles() {
 async function buildStyles() {
   try {   
     const pathBundleFolder = path.join(__dirname, 'project-dist');
-    
+    const copir = new Copir;
+
     await rm(pathBundleFolder, {force: true, recursive: true})
       .then( async () => {        
           mkdir(pathBundleFolder, { recursive: true })
           .then( bundleStyles )
-          .then( insertComponents ) 
+          .then( insertComponents )
+          .then(copir.copyDir('assets','assets')) 
       });
   }
   catch (err) {
@@ -212,9 +214,5 @@ class Copir {
     }
   }
 }
-
-const copir = new Copir;
-copir.copyDir('assets','assets');
-
 
 buildStyles();
