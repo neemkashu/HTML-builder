@@ -12,7 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 async function writeBundle() {
   let pathToFolder = path.join(__dirname, 'styles');
   const files = await readdir(pathToFolder, { withFileTypes: true });
-
+  
+  //TODO: need to unsure that write file is before FOR cycle
   writeFile(path.join(__dirname, 'project-dist', 'bundle.css'),'')
   .then( (err) => {
     if (err) throw err;
