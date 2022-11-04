@@ -6,28 +6,20 @@ import { rm } from 'node:fs/promises';
 import { writeFile } from 'node:fs/promises';
 import { readdir } from 'node:fs/promises';
 import fs from 'node:fs';
+//import { info } from 'node:console';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+async function isCorrectExt(pathToFolder, extention) {
+  try {
+    const isCorrectExtName = path.extname(pathToFolder) === extention; 
+    return isCorrectExtName;
+  }
+  catch (err) {
+    console.error(err);
+  }
+}
 
-async function isCSS(pathToFolder) {
-  try {
-    const isCorrectExtName = path.extname(pathToFolder) === '.css'; 
-    return isCorrectExtName;
-  }
-  catch (err) {
-    console.error(err);
-  }
-}
-async function isHTML(pathToFolder) {
-  try {
-    const isCorrectExtName = path.extname(pathToFolder) === '.html'; 
-    return isCorrectExtName;
-  }
-  catch (err) {
-    console.error(err);
-  }
-}
 async function bundleStyles() {
   let pathToStyles = path.join(__dirname, 'styles');
   const files = await readdir(pathToStyles, { withFileTypes: true });
@@ -36,7 +28,7 @@ async function bundleStyles() {
   writeFile(pathToBundleStyles,'')
   .then( async () => {
     for (const file of files) {
-      const isCSStype = await isCSS( path.join( pathToStyles, file.name) );
+      const isCSStype = await isCorrectExt( path.join( pathToStyles, file.name), '.css' );
       const readStream = fs.createReadStream(path.join( pathToStyles, file.name), {encoding: 'utf8'});
       const writeStream = fs.createWriteStream(pathToBundleStyles, {flags:'a'});
       
@@ -67,14 +59,14 @@ async function buildStyles() {
     console.error(err);
   }
 }
- async function findComponents() {   
+async function findComponents() {   
   const pathComponents  = path.join(__dirname, 'components');
   const components = await readdir(pathComponents, { withFileTypes: true });
   let componentList = [];
   let componentNames = [];
   for (let component of components) {
     const pathComponent = path.join(pathComponents, component.name);
-    if (component.isFile() && isHTML(component.name) ) {
+    if (component.isFile() && isCorrectExt(component.name, '.html') ) {
       componentList.push(pathComponent);
       componentNames.push(component.name);
     } 
@@ -103,20 +95,13 @@ async function cutTemplate (htmlCode){
   infoTemplate.listPlaceHolders = htmlCode.match(regexpPlaceHolder);
   infoTemplate.listIndents = htmlCode.match(regexpSpaces);
 
-  console.log( listPlaceHolders );
-  console.log( listIndents );
   return infoTemplate;
 }
-async function readTemplate(templateName) {
-  const pathToTemplate = path.join(__dirname, templateName);
-  const streamReadTemplate = fs.createReadStream(pathToTemplate, 'utf-8');
+async function readHTML(pathHTML) {
+  const streamReadTemplate = fs.createReadStream(pathHTML, 'utf-8');
 
   let htmlCode = '';
-  streamReadTemplate.on('data', chunk => {
-    htmlCode += chunk;
-    //console.log(htmlCode); 
-    //TODO: if the slot is cut by chunk this should not throw error
-  });
+
   return new Promise ((resolve, reject) => {
     streamReadTemplate.on('data', chunk => {
       htmlCode += chunk; //TODO: if the slot is cut by chunk this should not throw error
@@ -129,13 +114,11 @@ async function readTemplate(templateName) {
 
 buildStyles();
 
-let promiseListComponents = await findComponents();
-// promise.then(
-//   result => console.log(result)
-// );
-console.log(promiseListComponents);
-let promiseTemplate = await readTemplate('template.html');
-// promiseTemplate.then(
-//   result => console.log(result)
-// );
-console.log(promiseTemplate);
+const promiseListComponents = await findComponents();
+console.log('promiseListComponents', promiseListComponents);
+
+const promiseTemplate = await readHTML(path.join (__dirname,'template.html'));
+const infoTemplate = await cutTemplate(promiseTemplate);
+console.log('info template', infoTemplate);
+const promiseArticle = await readHTML(path.join (__dirname, 'components', 'articles.html'));
+console.log('info Article', promiseArticle);
