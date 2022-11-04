@@ -19,6 +19,15 @@ async function isCSS(pathToFolder) {
     console.error(err);
   }
 }
+async function isHTML(pathToFolder) {
+  try {
+    const isCorrectExtName = path.extname(pathToFolder) === '.html'; 
+    return isCorrectExtName;
+  }
+  catch (err) {
+    console.error(err);
+  }
+}
 async function bundleStyles() {
   let pathToStyles = path.join(__dirname, 'styles');
   const files = await readdir(pathToStyles, { withFileTypes: true });
@@ -41,7 +50,7 @@ async function bundleStyles() {
   });
 }
 
-async function build() {
+async function buildStyles() {
   try {   
     const pathBundleFolder = path.join(__dirname, 'project-dist');
     
@@ -50,7 +59,7 @@ async function build() {
     await rm(pathBundleFolder, {force: true, recursive: true})
       .then( async () => {        
           mkdir(pathBundleFolder, { recursive: true })
-            .then( bundleStyles ); 
+          .then( bundleStyles ); 
       });
   }
   catch (err) {
@@ -58,5 +67,22 @@ async function build() {
     console.error(err);
   }
 }
+ async function findComponents() {   
+  const pathComponents  = path.join(__dirname, 'components');
+  const components = await readdir(pathComponents, { withFileTypes: true });
+  let componentList = [];
+  for (let component of components) {
+    const pathComponent = path.join(pathComponents, component.name);
+    if (component.isFile() && isHTML(component.name) ) {
+      componentList.push(pathComponent);
+    } 
+  }
+  return componentList;
+}
 
-build();
+
+buildStyles();
+let promise = findComponents();
+promise.then(
+  result => console.log(result)
+);
