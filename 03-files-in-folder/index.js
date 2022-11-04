@@ -14,7 +14,7 @@ async function readStats(folder) {
         const statOfFile = await stat(path.join(pathToFolder,file.name));
         console.log(file.name, ' - ',
           path.extname(path.join(pathToFolder,file.name)).substring(1),' - ',
-          statOfFile.size, ' bytes');  
+          statOfFile.size / 1024, 'KB');  
       }
   }
   catch (err) {
