@@ -47,7 +47,8 @@ async function buildStyles() {
     await rm(pathBundleFolder, {force: true, recursive: true})
       .then( async () => {        
           mkdir(pathBundleFolder, { recursive: true })
-          .then( bundleStyles ); 
+          .then( bundleStyles )
+          .then( insertComponents ) 
       });
   }
   catch (err) {
@@ -143,4 +144,4 @@ async function insertComponents() {
 }
 
 buildStyles();
-insertComponents();
+//insertComponents();
