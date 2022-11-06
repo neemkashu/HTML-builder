@@ -1,79 +1,49 @@
 import path from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { fileURLToPath } from 'url';
 import { rm } from 'node:fs/promises';
 import { readdir } from 'node:fs/promises';
-//import { access } from 'node:fs/promises';
 import { copyFile } from 'node:fs/promises';
-//import { deflate } from 'node:zlib';
+import { stat } from 'node:fs/promises';
+
 class Copir {
-  async copyDir(folder) {
-    try {
-      this.__dirname = path.dirname(fileURLToPath(import.meta.url));
-      
-      this.folder = folder;
-      this.newFolder = folder + '-copy';
-      this.pathToFolder = path.join( this.__dirname, this.folder);
-      this.pathNewFolder = path.join(this.__dirname, this.newFolder);
-      
-      let isRemoved = undefined;
-      
-      await rm(this.pathNewFolder, {force: true, recursive: true})
-        .then( async () => {
-          const folderObject = await readdir(this.__dirname, { withFileTypes: true });
-          let targetFolder;
-          for (let eachFolder of folderObject) {
-            if (eachFolder.name === folder && !eachFolder.isFile()) {
-              targetFolder = eachFolder;
-              break;
-            } 
-          }
-          if (isRemoved === undefined) {
-            mkdir(this.pathNewFolder, { recursive: true }).then( this.copySubDir([undefined], targetFolder )); 
-          }
-        });
-      
-    }
-    catch (err) {
-      console.log('im outsider error');
-      console.error(err);
-    }
+  constructor (oldPath, newPath) {
+    this.__dirname = path.dirname(oldPath);
+    this.folder = path.parse(oldPath).name;
+    this.oldPath = oldPath;
+    this.newPath = newPath;
+    this.newFolder = path.resolve(oldPath) === path.resolve(newPath)?
+     `${this.folder}-copy`:
+      path.parse(newPath).name;
   }
-  // node is file or directory
-  async copySubDir(ancestorDir, node) {
+  async copyDir (oldPath, newPath){
+    rm(newPath, {force: true, recursive: true})
+    .then( async () => {
+      mkdir(newPath, { recursive: true })
+      .then(this.copySubDir(oldPath, newPath))
+      .catch(err => console.error(err));
+    });  
+  }
+  
+  async copySubDir(oldPath, newPath) {
+    const node = await stat(oldPath);
+
     if (node.isFile() ) { 
-      copyFile(path.join(this.__dirname, this.folder, ...ancestorDir, node.name), path.join(this.__dirname, this.newFolder, ...ancestorDir, node.name));
+      copyFile(oldPath, newPath);
     }
-    if ( !node.isFile() ) {
-      const pathToNode = (ancestorDir[0] === undefined)?
-        path.join(this.__dirname, this.folder):
-        path.join(this.__dirname, this.folder, ...ancestorDir, node.name);
-      
-      if (ancestorDir[0] !== undefined){
-        mkdir( path.join(this.__dirname, this.newFolder, ...ancestorDir, node.name),{ recursive: true } )
+    if ( node.isDirectory() ) {
+        mkdir( newPath,{ recursive: true } )
           .then(async () => {
-            const children = await readdir(pathToNode, { withFileTypes: true });
+            const children = await readdir(oldPath, { withFileTypes: true });
             for (const child of children) {
-              this.copySubDir(await this._developAncestor(ancestorDir, node.name), child);
+              this.copySubDir(path.join(oldPath, child.name), path.join(newPath, child.name));
             }
           });
-      } else {
-        const children = await readdir(pathToNode, { withFileTypes: true });
-        for (const child of children) {
-          this.copySubDir(await this._developAncestor(ancestorDir, node.name), child);
-        }
-      }
-      
-      
-    }
-  }
-  async _developAncestor(ancestorDir, folder) {
-    switch (ancestorDir[0]) {
-    case undefined: return [''];
-    default: return [...ancestorDir, folder];
     }
   }
 }
+const __dir = path.resolve();
+const pathOld = path.join(__dir,'04-copy-directory','files');
+const pathNew = path.join(__dir,'04-copy-directory','files-copy');
 
-const copir = new Copir;
-copir.copyDir('files');
+const copir = new Copir(pathOld, pathNew);
+copir.copyDir(pathOld, pathNew);
