@@ -6,15 +6,15 @@ import { copyFile } from 'node:fs/promises';
 import { stat } from 'node:fs/promises';
 
 class Copir {
-  constructor (oldPath, newPath) {
-    this.__dirname = path.dirname(oldPath);
-    this.folder = path.parse(oldPath).name;
-    this.oldPath = oldPath;
-    this.newPath = newPath;
-    this.newFolder = path.resolve(oldPath) === path.resolve(newPath)?
-     `${this.folder}-copy`:
-      path.parse(newPath).name;
-  }
+  //constructor (oldPath, newPath) {
+    // this.__dirname = path.dirname(oldPath);
+    // this.folder = path.parse(oldPath).name;
+    // this.oldPath = oldPath;
+    // this.newPath = newPath;
+    // this.newFolder = path.resolve(oldPath) === path.resolve(newPath)?
+    //  `${this.folder}-copy`:
+    //   path.parse(newPath).name;
+  //}
   async copyDir (oldPath, newPath){
     rm(newPath, {force: true, recursive: true})
     .then( async () => {
@@ -45,5 +45,5 @@ const __dir = path.resolve();
 const pathOld = path.join(__dir,'04-copy-directory','files');
 const pathNew = path.join(__dir,'04-copy-directory','files-copy');
 
-const copir = new Copir(pathOld, pathNew);
+const copir = new Copir();
 copir.copyDir(pathOld, pathNew);
