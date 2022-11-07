@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 import {writeFile} from 'node:fs/promises';
 import {appendFile} from 'node:fs/promises';
-import * as readline from 'node:readline/promises';
+import readline from 'node:readline';
 
 async function writeFromTerminal() {
   const { stdout, stdin } = process;
@@ -21,7 +21,7 @@ async function writeFromTerminal() {
       stdout.write('Exit procedure. The changes are saved in notes.txt');
       rl.close();
     } else {
-      appendFile(pathToNotes, line);
+      appendFile(pathToNotes, line+'\n');
     }
   });
 
