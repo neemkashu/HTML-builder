@@ -10,16 +10,6 @@ import { stat } from 'node:fs/promises';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-async function isCorrectExt(pathToFolder, extention) {
-  try {
-    const isCorrectExtName = path.extname(pathToFolder) === extention; 
-    return isCorrectExtName;
-  }
-  catch (err) {
-    console.error(err);
-  }
-}
-
 async function bundleStyles() {
   let pathToStyles = path.join(__dirname, 'styles');
   const files = await readdir(pathToStyles, { withFileTypes: true });
@@ -28,11 +18,10 @@ async function bundleStyles() {
   writeFile(pathToBundleStyles,'')
   .then( async () => {
     for (const file of files) {
-      const isCSStype = await isCorrectExt( path.join( pathToStyles, file.name), '.css' );
       const readStream = fs.createReadStream(path.join( pathToStyles, file.name), {encoding: 'utf8'});
       const writeStream = fs.createWriteStream(pathToBundleStyles, {flags:'a'});
       
-      if (file.isFile() && isCSStype) {    
+      if (file.isFile() && path.extname(file.name) === '.css') {    
         readStream.on('data', chunk => {
           writeStream.write(chunk);
         });
@@ -68,7 +57,7 @@ async function findComponents() {
 
   for (let component of components) {
     const pathComponent = path.join(pathComponents, component.name);
-    if (component.isFile() && isCorrectExt(component.name, '.html') ) {
+    if (component.isFile() && path.extname(component.name) === '.html' ) {
       let name = path.parse(component.name).name;
       listComponents[name] = { path: pathComponent, fileName:  name};
     } 
